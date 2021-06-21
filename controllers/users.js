@@ -21,24 +21,21 @@ module.exports.getUserId = (req, res) => {
   return user.findById(userId)
     .then((user) => {
       if (user) {
-        return res.status(200).send(user);
+        return res.status(200)
+          .send({ data: user });
       }
-      if (!userId) {
-        return res
-          .status(404)
-          .send({ message: 'Запрашиваемый пользователь не найден' });
-      }
+      return res
+        .status(404)
+        .send({ message: 'Пользователь не найден' });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         res.status(400).send({ message: 'Невалидный id пользователя' });
+      } else {
+        res
+          .status(500)
+          .send({ message: err.message });
       }
-      {
-
-      }
-      res
-        .status(500)
-        .send({ message: 'Ошибка' });
     });
 };
 
