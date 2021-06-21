@@ -1,4 +1,5 @@
-const user = require('../models/user')
+/* eslint-disable */
+const user = require('../models/user');
 
 module.exports.getUser = (req, res) => {
   user.find({})
@@ -6,102 +7,93 @@ module.exports.getUser = (req, res) => {
       if (user) {
         return res
           .status(200)
-          .send({data: user})
-      } else {
-        return res
-          .status(404)
-          .send({message: "Пользователь с таким id не найден"})
+          .send({ data: user });
       }
     })
-    .catch((err) => res.status(500).send({message: err.message}))
+    .catch((err) => res.status(500).send({ message: err.message }));
 };
 
 module.exports.getUserId = (req, res) => {
-  const {userId} = req.params;
+  const { userId } = req.params;
   return user.findById(userId)
     .then((user) => {
       if (user) {
         return res.status(200).send(user);
-      } else if (!userId) {
+      } if (!userId) {
         return res
           .status(404)
-          .send({message: "Запрашиваемый пользователь не найден"});
+          .send({ message: 'Запрашиваемый пользователь не найден' });
       }
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res
-          .status(400)
-          .send({
-            message: "Переданы некорректные данные при поиске пользователя",
-          });
+      if (err.name === 'CastError') {
+        res.status(400).send({ message: 'Невалидный id пользователя' });
+      }
+      {
+
       }
       res
         .status(500)
-        .send({message: "Ошибка"});
+        .send({ message: 'Ошибка' });
     });
 };
 
 module.exports.createUser = (req, res) => {
-  const {name, about, avatar} = req.body;
-  user.create({name, about, avatar})
+  const { name, about, avatar } = req.body;
+  user.create({ name, about, avatar })
     .then((user) => {
       if (user) {
-        return res.status(200).send({data: user})
-      } else {
-        return res
-          .status(500)
-          .send({message: "Некорректные данные"})
+        return res.status(200).send({ data: user });
       }
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res
-          .status(400)
-          .send({message: "Некорректные данные"})
-      }
-    })
+    .catch((err) => res.status(500).send({ message: err.message }));
 };
 
 module.exports.updateUser = (req, res) => {
-  const {name, about} = req.body
-  user.findByIdAndUpdate(req.user._id, {name, about})
+  const { name, about } = req.body;
+  user.findByIdAndUpdate(req.user._id, { name, about }, {
+    new: true,
+    runValidators: true,
+  })
     .then((user) => {
       if (user) {
         return res.status(200)
-          .send({data: user})
-      } else {
-        return res
-          .status(404)
-          .send({message: "Пользователь не найден"})
+          .send({ data: user });
       }
+      return res
+        .status(404)
+        .send({ message: 'Пользователь не найден' });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         return res
           .status(400)
-          .send({message: "Некорректные данные"})
+          .send({ message: 'Невалидный id пользователя' });
       }
-    })
-}
+      res.status(500).send({ message: err.message });
+    });
+};
 
 module.exports.updateAvatar = (req, res) => {
-  const {avatar} = req.body
-  user.findByIdAndUpdate(req.user._id, {avatar})
+  const { avatar } = req.body;
+  user.findByIdAndUpdate(req.user._id, { avatar }, {
+    new: true,
+    runValidators: true,
+  })
     .then((user) => {
       if (user) {
         return res.status(200)
-          .send({data: user})
-      } else {
-        return res.status(404)
-          .send({message: "Пользователь не найден"})
+          .send({ data: user });
       }
+      return res.status(404)
+        .send({ message: 'Пользователь не найден' });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         return res
           .status(400)
-          .send({message: "Некорректные данные"})
+          .send({ message: 'Невалидный id пользователя' });
       }
-    })
-}
+      res.status(500).send({ message: err.message });
+    });
+};
