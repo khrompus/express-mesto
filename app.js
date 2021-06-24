@@ -1,8 +1,14 @@
 const express = require('express');
+// eslint-disable-next-line import/no-unresolved
+const { celebrate, Joi } = require('celebrate');
+// eslint-disable-next-line import/no-unresolved
+const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const routesUser = require('./routes/users');
 const routerCard = require('./routes/cards');
+const Auth = require('./middlewares/Auth');
+const { createUser, login } = require('./controllers/users');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -17,16 +23,40 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   useFindAndModify: false,
   useUnifiedTopology: true,
 });
-app.use((req, res, next) => {
-  req.user = {
-    _id: '60cd31414c443e434c4f9a5a', // вставьте сюда _id созданного в предыдущем пункте пользователя
-  };
-  next();
+const validateUserSignUp = celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().regex(
+      // eslint-disable-next-line comma-dangle
+      /^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/
+    ),
+  }),
 });
+const validateSignIn = celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+});
+app.use(cookieParser());
+app.post('/signin', validateSignIn, login);
+app.post('/signup', validateUserSignUp, createUser);
+app.use(Auth);
 app.use(routesUser);
 app.use(routerCard);
+
 app.use((req, res) => {
   res.status(404).send({ message: 'Такой страницы не существует' });
+});
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err;
+  res.status(statusCode).send({
+    message: statusCode === 500 ? 'На сервере произошла ошибка' : message,
+  });
+  next();
 });
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);

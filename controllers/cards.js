@@ -3,9 +3,7 @@ const card = require('../models/card');
 // создание карточки
 
 module.exports.createCard = (req, res) => {
-  const ownerId = req.user._id;
-  const { name, link } = req.body;
-  card.create({ name, link, owner: ownerId })
+  card.create({ name: req.body.name, link: req.body.link, owner: req.user._id })
     .then((card) => res.status(201).send(card))
     .catch((err) => res.status(500).send({ message: err.message }));
 };
