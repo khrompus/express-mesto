@@ -12,46 +12,37 @@ module.exports.getUsers = (req, res, next) => {
       res.status(200).send({ data: items });
     })
     .catch((err) => {
-      if (err.message === 'NotValidId') {
-        next(new NotFoundError('Нет пользователя с таким id'));
-      }
-      if (err.kind === 'ObjectId') {
-        next(new BadRequestError('Переданы некорректный данные'));
-      }
       next(err);
     });
 };
 
 module.exports.getUser = (req, res, next) => {
-  const { _id } = req.user;
-  return user.findOne({ _id })
-    .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Нет пользователя с таким id');
-      }
-      res.status(200).send(user);
-    })
+  const userId = req.user._id;
+  return user.findById(userId)
+    .orFail(new NotFoundError('Пользователь по указанному _id не найден.'))
+    .then((user) => res.status(200).send(user))
     .catch((err) => {
-      if (err.message === 'NotValidId') {
-        next(new NotFoundError('Нет пользователя с таким id'));
-      }
       if (err.kind === 'ObjectId') {
-        next(new BadRequestError('Переданы некорректный данные'));
+        const error = new BadRequestError('Переданы некорректные данные.');
+        next(error);
       }
       next(err);
     });
 };
 
 module.exports.getUserId = (req, res, next) => {
-  user.findById(req.params.id)
-    .orFail(new Error('NotValidId'))
-    .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.message === 'NotValidId') {
-        next(new NotFoundError('Нет пользователя с таким id'));
+  const { userId } = req.params;
+  return user.findById(userId)
+    .then((user) => {
+      if (user) {
+        return res.status(200).send(user);
       }
+      throw new NotFoundError('Пользователь по указанному _id не найден.');
+    })
+    .catch((err) => {
       if (err.kind === 'ObjectId') {
-        next(new BadRequestError('Переданы некорректный данные'));
+        const error = new BadRequestError('Переданы некорректные данные.');
+        next(error);
       }
       next(err);
     });
@@ -90,20 +81,21 @@ module.exports.createUser = (req, res, next) => {
 };
 
 module.exports.updateUser = (req, res, next) => {
-  const { name, about } = req.body;
-  user.findByIdAndUpdate(
-    req.user._id,
-    { name, about },
-    { runValidators: true, new: true },
+  const userId = req.user._id;
+  return user.findByIdAndUpdate(
+    userId,
+     req.body ,
+    {
+      new: true,
+      runValidators: true,
+    },
   )
-    .orFail(new Error('NotValidId'))
-    .then((user) => res.status(200).send({ data: user }))
+    .orFail(new NotFoundError('Пользователь по указанному _id не найден.'))
+    .then((user) => res.status(200).send(user))
     .catch((err) => {
-      if (err.message === 'NotValidId') {
-        next(new NotFoundError('Нет пользователя с таким id'));
-      }
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Переданы некорректный данные'));
+        const error = new BadRequestError('Переданы некорректные данные при обновлении профиля.');
+        next(error);
       }
       next(err);
     });
