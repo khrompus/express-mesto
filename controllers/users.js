@@ -84,14 +84,23 @@ module.exports.updateUser = (req, res, next) => {
   const userId = req.user._id;
   return user.findByIdAndUpdate(
     userId,
-     req.body ,
+    { name: req.body.name, about: req.body.about },
     {
       new: true,
       runValidators: true,
     },
   )
     .orFail(new NotFoundError('Пользователь по указанному _id не найден.'))
-    .then((user) => res.status(200).send(user))
+    // .then((user) => res.status(200).send(user))
+    .then((user) => {
+      if(req.body === undefined||null){
+        const error = new BadRequestError('Переданы некорректные данные')
+        next(error)
+      }
+      else{
+        res.status(200).send({ data: user })
+      }
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const error = new BadRequestError('Переданы некорректные данные при обновлении профиля.');
