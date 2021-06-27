@@ -9,7 +9,7 @@ const BadRequestError = require('../errors/BadRequestError');
 module.exports.getUsers = (req, res, next) => {
   user.find({})
     .then((items) => {
-      res.status(200).send({ data: items });
+      res.status(200).send({data: items});
     })
     .catch((err) => {
       next(err);
@@ -31,7 +31,7 @@ module.exports.getUser = (req, res, next) => {
 };
 
 module.exports.getUserId = (req, res, next) => {
-  const { userId } = req.params;
+  const {userId} = req.params;
   return user.findById(userId)
     .then((user) => {
       if (user) {
@@ -81,6 +81,7 @@ module.exports.createUser = (req, res, next) => {
 };
 
 module.exports.updateUser = (req, res, next) => {
+  console.log(req.body)
   const userId = req.user._id;
   return user.findByIdAndUpdate(
     userId,
@@ -90,19 +91,9 @@ module.exports.updateUser = (req, res, next) => {
       runValidators: true,
     },
   )
+
+    .then((user) => res.status(200).send(user))
     .orFail(new NotFoundError('Пользователь по указанному _id не найден.'))
-    .then((user) => {
-      // if(user.name||user.about === null||undefined){
-      //   const error = new BadRequestError('Пользоваетль с указанным _id не найден.');
-      //   next(error)
-      // }
-      // else{
-      if (user){
-        res.status(200).send({ data: user })
-      }
-       throw new va
-      // }
-    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const error = new BadRequestError('Переданы некорректные данные при обновлении профиля.');
@@ -112,10 +103,10 @@ module.exports.updateUser = (req, res, next) => {
     });
 };
 module.exports.updateAvatar = (req, res, next) => {
-  const { avatar } = req.body;
+  const {avatar} = req.body;
   const owner = req.user._id;
-  user.findByIdAndUpdate(owner, { avatar }, { runValidators: true, new: true })
-    .then((user) => res.status(200).send({ data: user }))
+  user.findByIdAndUpdate(owner, {avatar}, {runValidators: true, new: true})
+    .then((user) => res.status(200).send({data: user}))
     .catch((err) => {
       if (err.message === 'NotValidId') {
         next(new NotFoundError('Нет пользователя с таким id'));
@@ -127,10 +118,10 @@ module.exports.updateAvatar = (req, res, next) => {
     });
 };
 module.exports.login = (req, res, next) => {
-  const { email, password } = req.body;
+  const {email, password} = req.body;
   return user.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'secret-key', {
+      const token = jwt.sign({_id: user._id}, 'secret-key', {
         expiresIn: '7d',
       });
       res
@@ -140,7 +131,7 @@ module.exports.login = (req, res, next) => {
           maxAge: 3600000 * 24 * 7,
         })
         .status(200)
-        .send({ token });
+        .send({token});
     })
     .catch(next);
 };
