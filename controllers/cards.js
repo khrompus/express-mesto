@@ -81,15 +81,14 @@ module.exports.dislikeCard = (req, res, next) => {
   )
     .then((card) => {
       if (card) {
-        res.send({ data: card });
+        return res.status(200).send(card);
       }
+      throw new NotFoundError('Карточка с указанным _id не найдена.');
     })
     .catch((err) => {
-      if (err.message === 'NotValidId') {
-        next(new NotFoundError('Карточка с указанным _id не найдена'));
-      }
       if (err.kind === 'ObjectId') {
-        next(new BadRequestError('Невалидный id'));
+        const error = new BadRequestError('Невалидный id');
+        next(error);
       }
       next(err);
     });

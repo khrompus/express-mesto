@@ -91,15 +91,17 @@ module.exports.updateUser = (req, res, next) => {
     },
   )
     .orFail(new NotFoundError('Пользователь по указанному _id не найден.'))
-    // .then((user) => res.status(200).send(user))
     .then((user) => {
-      if(req.body === undefined||null){
-        const error = new BadRequestError('Переданы некорректные данные')
-        next(error)
-      }
-      else{
+      // if(user.name||user.about === null||undefined){
+      //   const error = new BadRequestError('Пользоваетль с указанным _id не найден.');
+      //   next(error)
+      // }
+      // else{
+      if (user){
         res.status(200).send({ data: user })
       }
+       throw new va
+      // }
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
