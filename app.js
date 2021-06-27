@@ -1,6 +1,7 @@
 const express = require('express');
 // eslint-disable-next-line import/no-unresolved
 const { celebrate, Joi } = require('celebrate');
+const { errors } = require('celebrate');
 // eslint-disable-next-line import/no-unresolved
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
@@ -51,6 +52,7 @@ app.use(routerCard);
 app.use((req, res) => {
   res.status(404).send({ message: 'Такой страницы не существует' });
 });
+app.use(errors());
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
   res.status(statusCode).send({
@@ -58,6 +60,7 @@ app.use((err, req, res, next) => {
   });
   next();
 });
+
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`App listening on port ${PORT}`);
