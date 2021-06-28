@@ -10,6 +10,7 @@ const routesUser = require('./routes/users');
 const routerCard = require('./routes/cards');
 const Auth = require('./middlewares/Auth');
 const { createUser, login } = require('./controllers/users');
+const { requestLogger, errorLogger } = require('./middlewares/Logger');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -43,6 +44,7 @@ const validateSignIn = celebrate({
   }),
 });
 app.use(cookieParser());
+app.use(requestLogger);
 app.post('/signin', validateSignIn, login);
 app.post('/signup', validateUserSignUp, createUser);
 app.use(Auth);
@@ -52,6 +54,7 @@ app.use(routerCard);
 app.use((req, res) => {
   res.status(404).send({ message: 'Такой страницы не существует' });
 });
+app.use(errorLogger);
 app.use(errors());
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
